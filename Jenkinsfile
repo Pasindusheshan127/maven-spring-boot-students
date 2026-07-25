@@ -1,26 +1,22 @@
 pipeline {
     agent any
 
-    tools {
-        // Jenkins ඇතුළේ configure කරපු JDK/Maven නාමයන්
-        maven 'Maven3' 
-    }
-
     environment {
         DOCKER_HUB_REPO = 'pasindusheshan/gscomp336_2025'
     }
 
     stages {
-        // Stage 1: Git එකෙන් Code එක ගන්නවා
+        // Stage 1: GitHub එකෙන් Code එක ගන්නවා
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        // Stage 2: Spring Boot Project එක Build කරලා Test කරනවා
+        // Stage 2: Maven Wrapper එකෙන් App එක Build කරනවා (Jenkins Maven Tools අවශ්‍ය නැත)
         stage('Build & Test') {
             steps {
+                sh 'chmod +x mvnw'
                 sh './mvnw clean package -DskipTests'
             }
         }
