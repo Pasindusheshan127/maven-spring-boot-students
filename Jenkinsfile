@@ -6,36 +6,35 @@ pipeline {
     }
 
     stages {
-        // Stage 1: GitHub එකෙන් Code එක ගන්නවා
+        // Stage 1: Checkout
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        // Stage 2: Maven Wrapper එකෙන් App එක Build කරනවා (Jenkins Maven Tools අවශ්‍ය නැත)
+        // Stage 2: Windows Batch command (mvnw.cmd) එකෙන් Build කිරීම
         stage('Build & Test') {
             steps {
-                sh 'chmod +x mvnw'
-                sh './mvnw clean package -DskipTests'
+                bat 'mvnw.cmd clean package -DskipTests'
             }
         }
 
-        // Stage 3: Docker Image එක Build කරනවා
+        // Stage 3: Windows Batch එකෙන් Docker Build කිරීම
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${DOCKER_HUB_REPO}:${BUILD_NUMBER} ."
-                sh "docker build -t ${DOCKER_HUB_REPO}:latest ."
+                bat "docker build -t %DOCKER_HUB_REPO%:%BUILD_NUMBER% ."
+                bat "docker build -t %DOCKER_HUB_REPO%:latest ."
             }
         }
 
-        // Stage 4: Docker Hub එකට Image එක Push කරනවා
+        // Stage 4: Docker Hub Push කිරීම
         stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
-                    sh "docker push ${DOCKER_HUB_REPO}:${BUILD_NUMBER}"
-                    sh "docker push ${DOCKER_HUB_REPO}:latest"
+                    bat "docker login -u %DOCKER_USER% -p %DOCKER_PASS%"
+                    bat "docker push %DOCKER_HUB_REPO%:%BUILD_NUMBER%"
+                    bat "docker push %DOCKER_HUB_REPO%:latest"
                 }
             }
         }
@@ -43,7 +42,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker logout'
+            bat 'docker logout'
         }
     }
 }
